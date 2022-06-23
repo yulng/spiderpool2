@@ -3,7 +3,9 @@
 package common
 
 import (
+	"fmt"
 	"math/rand"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -24,4 +26,13 @@ func GenerateRandomNumber(max int) string {
 	rand.Seed(time.Now().UnixNano())
 	randomNumber := rand.Intn(max)
 	return strconv.Itoa(randomNumber)
+}
+
+func ExecCommandRebootNode(nodeMap map[string]bool) {
+	for node := range nodeMap {
+		session, err := gexec.Start(exec.Command("/bin/bash", "-c", fmt.Sprintf("docker restart %s", node)), GinkgoWriter, GinkgoWriter)
+		Expect(err).ShouldNot(HaveOccurred())
+		session.Terminate()
+		Eventually(session.Exited).Should(BeClosed())
+	}
 }
